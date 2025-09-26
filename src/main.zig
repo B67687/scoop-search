@@ -71,10 +71,10 @@ pub fn main() !void {
     defer bucketsDir.close();
 
     // search each bucket one by one
-    var results = std.ArrayList(SearchResult).init(allocator);
+    var results = std.ArrayList(SearchResult).empty;
     defer {
         for (results.items) |*e| e.deinit();
-        results.deinit();
+        results.deinit(allocator);
     }
     var iter = bucketsDir.iterate();
     while (try iter.next()) |f| {
@@ -92,7 +92,7 @@ pub fn main() !void {
         };
         try debug.log("Found {} matches\n", .{result.matches.items.len});
 
-        try results.append(try SearchResult.init(
+        try results.append(allocator, try SearchResult.init(
             allocator,
             f.name,
             result,
