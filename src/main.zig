@@ -1,11 +1,13 @@
 const std = @import("std");
-const poshHook = @import("args.zig").poshHook;
-const ParsedArgs = @import("args.zig").ParsedArgs;
+
+const mvzr = @import("mvzr");
+
 const env = @import("env.zig");
-const utils = @import("utils.zig");
+const ParsedArgs = @import("args.zig").ParsedArgs;
+const poshHook = @import("args.zig").poshHook;
 const search = @import("search.zig");
 const ThreadPool = @import("thread_pool.zig").ThreadPool;
-const mvzr = @import("mvzr");
+const utils = @import("utils.zig");
 
 /// Stores results of a search in a single bucket.
 const SearchResult = struct {
@@ -37,7 +39,8 @@ pub fn main() !void {
 
     // print posh hook and exit if requested
     if (args.hook) {
-        try std.io.getStdOut().writer().print("{s}\n", .{poshHook});
+        _ = try std.fs.File.stdout().write(poshHook);
+        _ = try std.fs.File.stdout().write("\n");
         std.process.exit(0);
     }
 
@@ -48,11 +51,11 @@ pub fn main() !void {
     defer allocator.free(query);
 
     const regexQuery = mvzr.compile(query) orelse
-        return std.io.getStdErr().writer().print("Invalid regular expression: parsing \"{s}\".", .{query});
+        return utils.printStderr("Invalid regular expression: parsing \"{s}\".", .{query});
 
     const scoopHome = env.scoopHomeOwned(allocator, debug) catch |err| switch (err) {
         error.MissingHomeDir => {
-            return std.io.getStdErr().writer().print("Could not establish scoop home directory. USERPROFILE environment variable is not defined.\n", .{});
+            return utils.printStderr("Could not establish scoop home directory. USERPROFILE environment variable is not defined.\n", .{});
         },
         else => |e| return e,
     };
@@ -64,7 +67,7 @@ pub fn main() !void {
     defer allocator.free(bucketsPath);
 
     var bucketsDir = std.fs.openDirAbsolute(bucketsPath, .{ .iterate = true }) catch
-        return std.io.getStdErr().writer().print("Could not open the buckets directory: {s}.\n", .{bucketsPath});
+        return utils.printStderr("Could not open the buckets directory: {s}.\n", .{bucketsPath});
     defer bucketsDir.close();
 
     // search each bucket one by one

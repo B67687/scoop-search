@@ -1,6 +1,7 @@
 const std = @import("std");
-const utils = @import("utils.zig");
 const testing = std.testing;
+
+const utils = @import("utils.zig");
 const DebugLogger = utils.DebugLogger;
 
 /// Checks if scoop-search should run in verbose mode.

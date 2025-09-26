@@ -106,13 +106,22 @@ pub fn Box(comptime T: type) type {
 }
 
 pub const DebugLogger = struct {
-    writer: ?std.fs.File.Writer,
+    enabled: bool,
 
     pub fn init(enabled: bool) @This() {
-        return .{ .writer = if (enabled) std.io.getStdErr().writer() else null };
+        return .{ .enabled = enabled };
     }
 
     pub inline fn log(self: @This(), comptime format: []const u8, args: anytype) !void {
-        if (self.writer) |out| try out.print(format, args);
+        if (self.enabled) std.debug.print(format, args);
     }
 };
+
+pub fn printStderr(comptime format: []const u8, args: anytype) !void {
+    var buffer: [256]u8 = undefined;
+    var writer = std.fs.File.stderr().writer(&buffer);
+    const stderr = &writer.interface;
+
+    try stderr.print(format, args);
+    try stderr.flush();
+}
