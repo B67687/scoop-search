@@ -56,6 +56,7 @@ scoop() {
     fi
 }
 ```
+*(if using with sfsu, add this line at the end of the function instead of what sfsu's docs says : `eval "$(sfsu.exe hook --shell bash)"`)*
 
 ## Features
 
