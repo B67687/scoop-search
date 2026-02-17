@@ -42,7 +42,7 @@ scoop-search.exe %newargs%
 goto :eof
 ```
 
-## Bash function
+## Bash wrapper
 
 If you prefer to use bash, you can do the same with a function, add this to your `~/.bashrc` file
 
