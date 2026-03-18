@@ -56,7 +56,6 @@ scoop() {
     fi
 }
 ```
-*(if using with sfsu, replace the `$SCOOP_EXEC $@` with `eval "$(sfsu.exe hook --shell bash --disable search)"`)*
 
 ## Features
 
