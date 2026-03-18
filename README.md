@@ -42,6 +42,21 @@ scoop-search.exe %newargs%
 goto :eof
 ```
 
+## Bash wrapper
+
+If you prefer to use bash, you can do the same with a function, add this to your `~/.bashrc` file
+
+```bash
+SCOOP_EXEC=$(which scoop)
+scoop() {
+    if [[ "$1" == "search" ]]; then
+        scoop-search ${@:2}
+    else
+        $SCOOP_EXEC $@
+    fi
+}
+```
+
 ## Features
 
 Behaves just like `scoop search` and returns identical output. If any differences are found please open an issue.
