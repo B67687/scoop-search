@@ -6,6 +6,7 @@ const utils = @import("utils.zig");
 const search = @import("search.zig");
 const ThreadPool = @import("thread_pool.zig").ThreadPool;
 const mvzr = @import("mvzr");
+const index_mod = @import("index.zig");
 
 /// Stores results of a search in a single bucket.
 const SearchResult = struct {
@@ -50,6 +51,7 @@ pub fn main() !void {
     const regexQuery = mvzr.compile(query) orelse
         return std.io.getStdErr().writer().print("Invalid regular expression: parsing \"{s}\".", .{query});
 
+    // Try index-based search first
     const scoopHome = env.scoopHomeOwned(allocator, debug) catch |err| switch (err) {
         error.MissingHomeDir => {
             return std.io.getStdErr().writer().print("Could not establish scoop home directory. USERPROFILE environment variable is not defined.\n", .{});
@@ -59,7 +61,41 @@ pub fn main() !void {
     defer allocator.free(scoopHome);
     try debug.log("Scoop home: {s}\n", .{scoopHome});
 
-    // get buckets path
+    // Try to load pre-computed index for faster search
+    const cachePath = try utils.concatOwned(allocator, scoopHome, "/cache/search-index.txt");
+    defer allocator.free(cachePath);
+    
+    if (index_mod.Index.load(allocator, cachePath)) |*idx| {
+        defer idx.deinit();
+        try debug.log("Using pre-computed index\n", .{});
+        var idx_results = idx.search(regexQuery);
+        defer idx_results.deinit();
+        
+        // Convert index results to output
+        // ... (simplified output for now - just print matches)
+        if (idx_results.items.len == 0) {
+            const colorConfig = std.io.tty.detectConfig(std.io.getStdOut());
+            try colorConfig.setColor(std.io.getStdOut().writer(), std.io.tty.Color.yellow);
+            try std.io.getStdOut().writer().print("WARN  No matches found.\n", .{});
+            try colorConfig.setColor(std.io.getStdOut().writer(), std.io.tty.Color.reset);
+            std.process.exit(1);
+        }
+        
+        // Group by bucket and print
+        // (simplified)
+        for (idx_results.items) |entry| {
+            try std.io.getStdOut().writer().print("'{s}' bucket:\n    {s} ({s})", .{
+                entry.bucket, entry.name, entry.version
+            });
+            if (entry.bins.items.len > 0) {
+                try std.io.getStdOut().writer().print(" --> includes '{s}'", .{entry.bins.items[0]});
+            }
+            try std.io.getStdOut().writer().print("\n", .{});
+        }
+        std.process.exit(0);
+    }
+
+    // Fall back to original bucket-scanning approach
     const bucketsPath = try utils.concatOwned(allocator, scoopHome, "/buckets");
     defer allocator.free(bucketsPath);
 

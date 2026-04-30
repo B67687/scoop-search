@@ -1,8 +1,8 @@
-# scoop-search
+# scoop-search-improved-zig
 
-[![](https://github.com/shilangyu/scoop-search/workflows/ci/badge.svg)](https://github.com/shilangyu/scoop-search/actions)
+Fast `scoop search` drop-in replacement with pre-computed indexing optimization.
 
-Fast `scoop search` drop-in replacement 🚀
+Based on [shilangyu/scoop-search](https://github.com/shilangyu/scoop-search) with optimizations.
 
 ## Installation
 
